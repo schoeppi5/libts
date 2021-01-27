@@ -6,12 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"reflect"
-	"strings"
 	"time"
-
-	"github.com/mitchellh/mapstructure"
-	"github.com/schoeppi5/libts"
 )
 
 // Shared codebase for queries
@@ -30,73 +25,6 @@ func (qe QueryError) Error() string {
 	}
 	return s
 }
-
-// UnmarshalResponse attempts to parse body to value
-// If value is a single struct, only the first element of body is unmarsheld
-// If value is a slice of structs, UnmarshalResponse will append to that slice
-// If value is an array of structs, UnmarshalResponse will try to set the indices of the array
-func UnmarshalResponse(body []map[string]interface{}, value interface{}) error {
-	kind := reflect.Indirect(reflect.ValueOf(value)).Kind()
-	if kind == reflect.Struct { // one item expected
-		err := Decode(body[0], value)
-		if err != nil {
-			return err
-		}
-	} else if kind == reflect.Slice { // slice of items expected
-		inter := getTypeOfSlice(value)
-		v := reflect.ValueOf(value).Elem()
-		for i := range body {
-			err := Decode(body[i], &inter)
-			if err != nil {
-				return err
-			}
-			v.Set(reflect.Append(v, reflect.ValueOf(inter)))
-		}
-	} else if reflect.Indirect(reflect.ValueOf(value)).Kind() == reflect.Array { // array of items expected
-		inter := getTypeOfSlice(value)
-		v := reflect.ValueOf(value).Elem()
-		for i := range body {
-			if i > reflect.Indirect(reflect.ValueOf(value)).Len()-1 { // reached end of expected output
-				break
-			}
-			err := Decode(body[i], &inter)
-			if err != nil {
-				return err
-			}
-			v.Index(i).Set(reflect.ValueOf(inter))
-		}
-	} else {
-		return fmt.Errorf("unsupported type %s. Expected type struct, slice or array", reflect.Indirect(reflect.ValueOf(value)).Kind())
-	}
-	return nil
-}
-
-// Decode creates a new decoder and decodes m to v
-func Decode(m map[string]interface{}, v interface{}) error {
-	if reflect.ValueOf(v).Kind() != reflect.Ptr {
-		return errors.New("expected pointer to value, not value")
-	}
-	decodeConfig := &mapstructure.DecoderConfig{
-		DecodeHook:       mapstructure.TextUnmarshallerHookFunc(),
-		Metadata:         nil,
-		Result:           v,
-		WeaklyTypedInput: true,
-	}
-	decoder, _ := mapstructure.NewDecoder(decodeConfig)
-	err := decoder.Decode(m)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-// getTypeOfSlice returns the zero value for the type of a slice or arry
-// e.g.: []struct{} -> zero value of struct{}
-func getTypeOfSlice(s interface{}) interface{} {
-	return reflect.Zero(reflect.ValueOf(s).Elem().Type().Elem()).Interface()
-}
-
-// Handling of persistent connections
 
 // KeepAlive sends " \n" every t to conn
 func KeepAlive(conn io.Writer, t time.Duration) {
@@ -125,9 +53,11 @@ func ReadHeader(r <-chan []byte) error {
 	return nil
 }
 
-// Run writes r to in and reads the first line from out and checks, if it is an error
-// r must be terminated by \n
+// Run writes r to in and reads until it encounters an error. If error has id 0, the read data is returned
 func Run(in <-chan []byte, out io.Writer, r []byte) ([]byte, error) {
+	if !bytes.HasSuffix(r, []byte("\n")) { // a command must be suffixed by \n
+		r = append(r, byte('\n'))
+	}
 	_, err := out.Write(r)
 	if err != nil {
 		return nil, err
@@ -138,7 +68,7 @@ func Run(in <-chan []byte, out io.Writer, r []byte) ([]byte, error) {
 		if !open {
 			return nil, errors.New("unable to read response: connection closed")
 		}
-		if err = isError(d); err != nil {
+		if err = IsError(d); err != nil {
 			if e, ok := err.(QueryError); ok {
 				if e.ID == 0 {
 					return data, nil
@@ -151,10 +81,16 @@ func Run(in <-chan []byte, out io.Writer, r []byte) ([]byte, error) {
 	}
 }
 
-// Demultiplexer seperates the notifications and everything else
-// Stops when m is closed or it encounters an error while reading from m
-func Demultiplexer(m io.Reader, out chan<- []byte, notify chan<- []byte) {
-	reader := bufio.NewReader(m)
+// Split the input from c
+// notifications (prefixed with notify.*) are send to notify, everything else is send to out
+// Stops when c is closed or it encounters an error while reading from c
+// If notify is nil, notifications are discarded
+// If out is nil, Split returns
+func Split(c io.Reader, out chan<- []byte, notify chan<- []byte) {
+	if out == nil {
+		return
+	}
+	reader := bufio.NewReader(c)
 	for {
 		data, err := reader.ReadBytes('\n')
 		if err != nil {
@@ -163,54 +99,16 @@ func Demultiplexer(m io.Reader, out chan<- []byte, notify chan<- []byte) {
 			return
 		}
 		data = bytes.TrimRight(bytes.TrimLeft(data, "\r"), "\n") // normalize data
-		if bytes.Index(data, []byte("notify")) == 0 {
-			notify <- data
+		if bytes.HasPrefix(data, []byte("notify")) {
+			if notify == nil {
+				continue
+			}
+			select { // non blocking write to notify
+			case notify <- data:
+			default:
+			}
 			continue
 		}
-		out <- data
+		out <- data // block on write to out
 	}
-}
-
-// Helpers for converting responses
-
-// IsError returns the error if any
-func isError(r []byte) error {
-	parts := bytes.SplitN(r, []byte(" "), 2)
-	if bytes.Compare(parts[0], []byte("error")) == 0 {
-		e := &QueryError{}
-		err := UnmarshalResponse(ConvertResponse(parts[1]), e)
-		if err != nil {
-			return err
-		}
-		return *e
-	}
-	return nil
-}
-
-// ConvertResponse parses the serverquery response to a map
-func ConvertResponse(r []byte) []map[string]interface{} {
-	var list []map[string]interface{}
-	items := bytes.Split(r, []byte("|"))
-	for i := range items {
-		list = append(list, responseToMap(items[i]))
-	}
-	return list
-}
-
-func responseToMap(r []byte) map[string]interface{} {
-	m := make(map[string]interface{})
-	pairs := bytes.Split(r, []byte(" "))
-	for i := range pairs {
-		kV := bytes.SplitN(pairs[i], []byte("="), 2)
-		key := string(kV[0])
-		if len(kV) != 2 {
-			m[key] = ""
-			continue
-		}
-		if strings.Contains(key, "client_default_channel") { // I do not know why. The client_default_channel is wrongly encoded. I don't know why
-			kV[1] = []byte(libts.QueryDecoder.Replace(string(kV[1])))
-		}
-		m[key] = libts.QueryDecoder.Replace(string(kV[1]))
-	}
-	return m
 }

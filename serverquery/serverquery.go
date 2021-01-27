@@ -28,9 +28,7 @@ func NewServerQuery(host string, port int, username string, password string) (*S
 	if err != nil {
 		return nil, err
 	}
-	in := make(chan []byte)
-	notify := make(chan []byte)
-	go core.Demultiplexer(conn, in, notify) // split the input from teamspeak into notifys and everything else
+	in := make(chan []byte, 5)
 	sq := ServerQuery{
 		Host:     host,
 		Port:     port,
@@ -38,8 +36,9 @@ func NewServerQuery(host string, port int, username string, password string) (*S
 		Password: password,
 		in:       in,
 		conn:     conn,
-		notify:   notify,
+		notify:   nil,
 	}
+	go core.Split(conn, sq.in, sq.notify) // split the input from teamspeak into notifys and everything else
 	// slurp the header
 	err = core.ReadHeader(in)
 	if err != nil {

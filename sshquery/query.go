@@ -28,6 +28,7 @@ func (sq *SSHQuery) DoRaw(request libts.Request) ([]byte, error) {
 
 // Notification returns an io.Reader for arriving events
 func (sq *SSHQuery) Notification() <-chan []byte {
+	sq.notify = make(chan []byte, 5)
 	return sq.notify
 }
 

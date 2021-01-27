@@ -37,6 +37,7 @@ func (sq *ServerQuery) DoRaw(request libts.Request) ([]byte, error) {
 
 // Notification returns an io.Reader for arriving events
 func (sq *ServerQuery) Notification() <-chan []byte {
+	sq.notify = make(chan []byte, 5)
 	return sq.notify
 }
 

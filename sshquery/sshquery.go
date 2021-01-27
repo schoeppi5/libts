@@ -55,9 +55,7 @@ func NewSSHQuery(host string, port int, username, password string) (*SSHQuery, e
 		conn.Close()
 		return nil, err
 	}
-	in := make(chan []byte)
-	notify := make(chan []byte)
-	go core.Demultiplexer(input, in, notify) // split the input from teamspeak into notifys and everything else
+	in := make(chan []byte, 5)
 	sshq := &SSHQuery{
 		Host:     host,
 		Port:     port,
@@ -66,9 +64,10 @@ func NewSSHQuery(host string, port int, username, password string) (*SSHQuery, e
 		conn:     conn,
 		in:       in,
 		out:      out,
-		notify:   notify,
+		notify:   nil,
 	}
-	err = core.ReadHeader(in) // slurp header
+	go core.Split(input, sshq.in, sshq.notify) // split the input from teamspeak into notifys and everything else
+	err = core.ReadHeader(in)                  // slurp header
 	if err != nil {
 		conn.Close()
 		return nil, err

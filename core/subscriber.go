@@ -11,7 +11,11 @@ import (
 // SortEvents to the appropriate channels
 // exits when in is closed
 // either sends the event as event.Template or an error when failed to parse
+// SortEvents returns if es is nil
 func SortEvents(in <-chan []byte, es *EventStore) {
+	if es == nil {
+		return
+	}
 	for {
 		notify, open := <-in
 		if !open {

@@ -12,7 +12,6 @@ import (
 func TestSortEvents(t *testing.T) {
 	// given
 	c := make(chan interface{})
-	defer close(c)
 	in := make(chan []byte, 1)
 	defer close(in)
 	in <- []byte("notifytest test1=1 test2=2")
@@ -47,7 +46,6 @@ func TestSortEvents(t *testing.T) {
 func TestSortEventsNonPointerTemplate(t *testing.T) {
 	// given
 	c := make(chan interface{})
-	defer close(c)
 	in := make(chan []byte, 1)
 	defer close(in)
 	in <- []byte("notifytest test1=1 test2=2")
@@ -82,7 +80,7 @@ func TestSortEventsClosedChannel(t *testing.T) {
 	close(in)
 
 	// when
-	core.SortEvents(in, nil)
+	core.SortEvents(in, core.NewEventStore())
 
 	// then
 	// passes when not killed by deadline
