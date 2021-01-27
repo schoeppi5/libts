@@ -58,22 +58,3 @@ func (a Agent) ClientLeftServer(c chan interface{}) error {
 	}
 	return nil
 }
-
-// ServerTextMessages subscribes to the TextMessage events on server level
-// events recieved on the channel will always be of type TextMessageEvent
-func (a Agent) ServerTextMessages(c chan interface{}) error {
-	s := libts.Subscription{
-		Name: TextServer,
-		Events: map[string]libts.Event{
-			TextMessage: libts.Event{
-				Template: &TextMessageEvent{},
-				C:        c,
-			},
-		},
-	}
-	err := a.Subscriber.Subscribe(s)
-	if err != nil {
-		return err
-	}
-	return nil
-}

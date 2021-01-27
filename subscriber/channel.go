@@ -182,23 +182,3 @@ func (a Agent) ClientLeftChannel(c chan interface{}, cid int) error {
 	}
 	return nil
 }
-
-// ChannelTextMessage subscribes to the TextMessage events for channel cid
-// events recieved on the channel will always be of type TextMessageEvent
-// The query will only recieve messages from the channel it is currently in
-func (a Agent) ChannelTextMessage(c chan interface{}) error {
-	s := libts.Subscription{
-		Name: TextChannel,
-		Events: map[string]libts.Event{
-			TextMessage: libts.Event{
-				Template: &TextMessageEvent{},
-				C:        c,
-			},
-		},
-	}
-	err := a.Subscriber.Subscribe(s)
-	if err != nil {
-		return err
-	}
-	return nil
-}
