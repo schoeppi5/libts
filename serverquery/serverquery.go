@@ -5,9 +5,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/schoeppi5/libts/core"
-
 	"github.com/schoeppi5/libts"
+	"github.com/schoeppi5/libts/communication"
 )
 
 // ServerQuery wraps around ts3.Client and has some additional methods
@@ -22,9 +21,17 @@ type ServerQuery struct {
 	notify   chan []byte
 }
 
-// NewServerQuery establishes the tcp connection to teamspeak and logs the query in once cennected
+// NewServerQuery establishes the tcp connection to teamspeak and logs the query in once connected
 func NewServerQuery(host string, port int, username string, password string) (*ServerQuery, error) {
 	conn, err := net.DialTimeout("tcp", net.JoinHostPort(host, fmt.Sprint(port)), 10*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	err = conn.(*net.TCPConn).SetKeepAlive(true)
+	if err != nil {
+		return nil, err
+	}
+	err = conn.(*net.TCPConn).SetKeepAlivePeriod(120 * time.Second)
 	if err != nil {
 		return nil, err
 	}
@@ -38,14 +45,13 @@ func NewServerQuery(host string, port int, username string, password string) (*S
 		conn:     conn,
 		notify:   nil,
 	}
-	go core.Split(conn, sq.in, sq.notify) // split the input from teamspeak into notifys and everything else
+	go communication.Split(conn, sq.in, sq.notify) // split the input from teamspeak into notifys and everything else
 	// slurp the header
-	err = core.ReadHeader(in)
+	err = communication.ReadHeader(in)
 	if err != nil {
 		conn.Close()
 		return nil, err
 	}
-	go core.KeepAlive(conn, 200*time.Second)
 	sq.login(username, password)
 	return &sq, nil
 }
@@ -85,6 +91,7 @@ func (sq *ServerQuery) logout() error {
 	return nil
 }
 
+// quit connection
 func (sq *ServerQuery) quit() error {
 	quit := libts.Request{
 		Command: "quit",

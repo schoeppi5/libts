@@ -1,10 +1,8 @@
-package core_test
+package communication_test
 
 import (
 	"fmt"
 	"testing"
-
-	"github.com/schoeppi5/libts/core"
 )
 
 func TestUnmarshalResponseMapToStruct(t *testing.T) {
@@ -27,7 +25,7 @@ func TestUnmarshalResponseMapToStruct(t *testing.T) {
 	}
 
 	// when
-	err := core.UnmarshalResponse(m, &have)
+	err := communication.UnmarshalResponse(m, &have)
 
 	// then
 	if err != nil {
@@ -51,7 +49,7 @@ func TestUnmarshalResponseMapToStructError(t *testing.T) {
 	want := "1 error(s) decoding:\n\n* cannot parse 'Tag1[0]' as bool: strconv.ParseBool: parsing \"test1\": invalid syntax"
 
 	// when
-	err := core.UnmarshalResponse(m, &have)
+	err := communication.UnmarshalResponse(m, &have)
 
 	// then
 	if err == nil {
@@ -87,7 +85,7 @@ func TestUnmarshalResponseMapToArray(t *testing.T) {
 	}}
 
 	// when
-	err := core.UnmarshalResponse(m, &have)
+	err := communication.UnmarshalResponse(m, &have)
 
 	// then
 	if err != nil {
@@ -125,7 +123,7 @@ func TestUnmarshalResponseMapToShorterArray(t *testing.T) {
 	}}
 
 	// when
-	err := core.UnmarshalResponse(m, &have)
+	err := communication.UnmarshalResponse(m, &have)
 
 	// then
 	if err != nil {
@@ -157,7 +155,7 @@ func TestUnmarshalResponseMapToArrayError(t *testing.T) {
 	want := "1 error(s) decoding:\n\n* cannot parse 'Tag1[0]' as bool: strconv.ParseBool: parsing \"test1_1\": invalid syntax"
 
 	// when
-	err := core.UnmarshalResponse(m, &have)
+	err := communication.UnmarshalResponse(m, &have)
 
 	// then
 	if err == nil {
@@ -193,7 +191,7 @@ func TestUnmarshalResponseMapToSlice(t *testing.T) {
 	}}
 
 	// when
-	err := core.UnmarshalResponse(m, &have)
+	err := communication.UnmarshalResponse(m, &have)
 
 	// then
 	if err != nil {
@@ -240,7 +238,7 @@ func TestUnmarshalResponseMapToSliceWithContent(t *testing.T) {
 	}}
 
 	// when
-	err := core.UnmarshalResponse(m, &have)
+	err := communication.UnmarshalResponse(m, &have)
 
 	// then
 	if err != nil {
@@ -272,7 +270,7 @@ func TestUnmarshalResponseMapToSliceError(t *testing.T) {
 	want := "1 error(s) decoding:\n\n* cannot parse 'Tag1[0]' as bool: strconv.ParseBool: parsing \"test1_1\": invalid syntax"
 
 	// when
-	err := core.UnmarshalResponse(m, &have)
+	err := communication.UnmarshalResponse(m, &have)
 
 	// then
 	if err == nil {
@@ -291,7 +289,7 @@ func TestUnmarshalResponseMapToUnsupportedTypeError(t *testing.T) {
 	have := ""
 
 	// when
-	err := core.UnmarshalResponse(m, &have)
+	err := communication.UnmarshalResponse(m, &have)
 
 	// then
 	if err == nil {
@@ -313,7 +311,7 @@ func TestDecodeMapToNonPtrError(t *testing.T) {
 	want := "expected pointer to value, not value"
 
 	// when
-	err := core.Decode(m, have)
+	err := communication.Decode(m, have)
 
 	// then
 	if err == nil {

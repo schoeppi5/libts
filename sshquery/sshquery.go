@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/schoeppi5/libts"
-	"github.com/schoeppi5/libts/core"
+	"github.com/schoeppi5/libts/communication"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -36,6 +36,9 @@ func NewSSHQuery(host string, port int, username, password string) (*SSHQuery, e
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: maybe change this to knownhosts
 	}
 	conn, err := ssh.Dial("tcp", net.JoinHostPort(host, fmt.Sprint(port)), config)
+	if err != nil {
+		return nil, err
+	}
 	session, err := conn.NewSession()
 	if err != nil {
 		conn.Close()
@@ -66,13 +69,13 @@ func NewSSHQuery(host string, port int, username, password string) (*SSHQuery, e
 		out:      out,
 		notify:   nil,
 	}
-	go core.Split(input, sshq.in, sshq.notify) // split the input from teamspeak into notifys and everything else
-	err = core.ReadHeader(in)                  // slurp header
+	go communication.Split(input, sshq.in, sshq.notify) // split the input from teamspeak into notifys and everything else
+	err = communication.ReadHeader(in)                  // slurp header
 	if err != nil {
 		conn.Close()
 		return nil, err
 	}
-	go core.KeepAlive(out, 200*time.Second) // keepAlive
+	go communication.KeepAlive(out, 200*time.Second) // keepAlive
 	return sshq, nil
 }
 
@@ -80,7 +83,6 @@ func NewSSHQuery(host string, port int, username, password string) (*SSHQuery, e
 func (sq *SSHQuery) Close() {
 	sq.logout()
 	sq.quit()
-	sq.conn.Close()
 }
 
 // logout from server

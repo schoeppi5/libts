@@ -69,6 +69,9 @@ func (r Request) String() string {
 }
 
 func printArg(key string, value interface{}) string {
+	if strings.HasPrefix(key, "-") {
+		return key
+	}
 	return fmt.Sprintf("%s=%s", key, QueryEncoder.Replace(fmt.Sprint(value)))
 }
 
@@ -97,8 +100,12 @@ type Query interface {
 	Do(req Request, res interface{}) error
 	// DoRaw just returns the answer of teamspeak
 	DoRaw(req Request) ([]byte, error)
-	// Notifications provides a io.Reader which includes only the notifications
+	// Notifications provides a chan which includes only the notifications
 	Notification() <-chan []byte
+	// Connected returns true, if the query can still send and recieve on the connection
+	// The query sends the version command to do that
+	// Returns the recieved error if false
+	Connected() (bool, error)
 }
 
 // Subscriber can subscribe to events

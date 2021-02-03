@@ -1,4 +1,4 @@
-package core
+package communication
 
 import (
 	"bufio"
@@ -77,7 +77,10 @@ func Run(in <-chan []byte, out io.Writer, r []byte) ([]byte, error) {
 			}
 			return nil, err
 		}
-		data = d
+		if len(data) != 0 {
+			data = append(data, byte('|'))
+		}
+		data = append(data, d...)
 	}
 }
 
@@ -95,7 +98,9 @@ func Split(c io.Reader, out chan<- []byte, notify chan<- []byte) {
 		data, err := reader.ReadBytes('\n')
 		if err != nil {
 			close(out)
-			close(notify)
+			if notify != nil {
+				close(notify)
+			}
 			return
 		}
 		data = bytes.TrimRight(bytes.TrimLeft(data, "\r"), "\n") // normalize data

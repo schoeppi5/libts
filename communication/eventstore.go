@@ -1,4 +1,4 @@
-package core
+package communication
 
 import (
 	"sync"
@@ -6,7 +6,7 @@ import (
 	"github.com/schoeppi5/libts"
 )
 
-// EventStore is used to manage events across a subscriber and the event loop (core.SortEvents)
+// EventStore is used to manage events across a subscriber and the event loop (communication.SortEvents)
 // it is basically a thread-safe map
 type EventStore struct {
 	store map[string]*libts.Event

@@ -9,19 +9,22 @@ import (
 	"net/http"
 
 	"github.com/schoeppi5/libts"
-	"github.com/schoeppi5/libts/core"
+	"github.com/schoeppi5/libts/communication"
 )
 
 // This file fullfills the libts.Query interface
 
 type response struct {
-	Body   []map[string]interface{}
-	Status core.QueryError
+	Body   json.RawMessage
+	Status communication.QueryError
 }
 
 // Do executes the given command against TeamSpeak
 func (wq WebQuery) Do(request libts.Request, response interface{}) error {
 	respBody, err := wq.DoRaw(request)
+	if err != nil {
+		return err
+	}
 	err = unmarshalBody(respBody, response)
 	if err != nil {
 		return err
@@ -40,7 +43,16 @@ func (wq WebQuery) DoRaw(request libts.Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return respBody, nil
+	fmt.Printf("Request: %s\n\tBody: %s", request.String(), respBody)
+	body := response{}
+	err = json.Unmarshal(respBody, &body)
+	if err != nil {
+		return nil, err
+	}
+	if body.Status.ID != 0 {
+		return nil, body.Status
+	}
+	return body.Body, nil
 }
 
 // Notification is not yet implementable using webquery! This func will panic if used
@@ -48,24 +60,30 @@ func (wq WebQuery) Notification() <-chan []byte {
 	panic(errors.New("webquery does not yet implement subscribing to events"))
 }
 
+// Connected sends the version command and returns the recieved error, if any
+func (wq WebQuery) Connected() (bool, error) {
+	version := libts.Request{
+		Command: "version",
+	}
+	_, err := wq.DoRaw(version)
+	return err == nil, err
+}
+
 func unmarshalBody(body []byte, value interface{}) error {
-	response := &response{}
+	response := []map[string]interface{}{}
 	err := json.Unmarshal(body, &response)
 	if err != nil {
 		return err
 	}
-	if response.Status.ID != 0 {
-		return response.Status
-	}
 	// decode query response
-	for i := range response.Body {
-		for key := range response.Body[i] {
-			if s, ok := response.Body[i][key].(string); ok {
-				response.Body[i][key] = libts.QueryDecoder.Replace(s)
+	for i := range response {
+		for key := range response[i] {
+			if s, ok := response[i][key].(string); ok {
+				response[i][key] = libts.QueryDecoder.Replace(s)
 			}
 		}
 	}
-	return core.UnmarshalResponse(response.Body, value)
+	return communication.UnmarshalResponse(response, value)
 }
 
 func (wq WebQuery) marshalRequest(r libts.Request) *http.Request {

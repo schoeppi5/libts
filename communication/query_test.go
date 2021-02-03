@@ -1,4 +1,4 @@
-package core_test
+package communication_test
 
 import (
 	"bytes"
@@ -11,14 +11,12 @@ import (
 	"time"
 
 	"github.com/schoeppi5/libts"
-
-	"github.com/schoeppi5/libts/core"
 )
 
 func TestQueryErrorIsError(t *testing.T) {
 	t.Parallel()
 	// given
-	qe := &core.QueryError{}
+	qe := &communication.QueryError{}
 
 	// when
 	_, isError := interface{}(qe).(error)
@@ -32,7 +30,7 @@ func TestQueryErrorIsError(t *testing.T) {
 func TestQueryErrorString(t *testing.T) {
 	t.Parallel()
 	// given
-	qe := &core.QueryError{
+	qe := &communication.QueryError{
 		ID:      1234,
 		Message: "This is a test",
 	}
@@ -50,7 +48,7 @@ func TestQueryErrorString(t *testing.T) {
 func TestQueryErrorStringExtraMessage(t *testing.T) {
 	t.Parallel()
 	// given
-	qe := &core.QueryError{
+	qe := &communication.QueryError{
 		ID:           1234,
 		Message:      "This is a test",
 		ExtraMessage: "A very serious test",
@@ -74,7 +72,7 @@ func TestKeepAlive(t *testing.T) {
 	want := strings.Repeat(" \n", interval)
 
 	// when
-	go core.KeepAlive(b, time.Second)
+	go communication.KeepAlive(b, time.Second)
 	<-timer.C
 
 	// then
@@ -94,7 +92,7 @@ func TestReadHeader(t *testing.T) {
 	// when
 	c <- header
 	c <- banner
-	err := core.ReadHeader(c)
+	err := communication.ReadHeader(c)
 
 	// then
 	if err != nil {
@@ -112,7 +110,7 @@ func TestReadHeaderWrongHeaderError(t *testing.T) {
 	// when
 	c <- header
 	c <- banner
-	err := core.ReadHeader(c)
+	err := communication.ReadHeader(c)
 
 	// then
 	if err == nil {
@@ -130,7 +128,7 @@ func TestReadHeaderChannelClosedError(t *testing.T) {
 	want := "unable to read header: connection closed"
 
 	// when
-	err := core.ReadHeader(c)
+	err := communication.ReadHeader(c)
 
 	// then
 	if err == nil {
@@ -150,7 +148,7 @@ func TestRunSimpleResponse(t *testing.T) {
 	cmd := []byte("test")
 
 	// when
-	data, err := core.Run(in, writer, cmd)
+	data, err := communication.Run(in, writer, cmd)
 
 	// then
 	if err != nil {
@@ -175,7 +173,7 @@ func TestRunComplexResponse(t *testing.T) {
 	cmd := []byte("test")
 
 	// when
-	data, err := core.Run(in, writer, cmd)
+	data, err := communication.Run(in, writer, cmd)
 
 	// then
 	if err != nil {
@@ -201,7 +199,7 @@ func TestRunClosedWriter(t *testing.T) {
 	cmd := []byte("test")
 
 	// when
-	_, err = core.Run(in, writer, cmd)
+	_, err = communication.Run(in, writer, cmd)
 
 	// then
 	if err == nil {
@@ -220,7 +218,7 @@ func TestRunClosedChannel(t *testing.T) {
 	cmd := []byte("test")
 
 	// when
-	_, err := core.Run(in, writer, cmd)
+	_, err := communication.Run(in, writer, cmd)
 
 	// then
 	if err == nil {
@@ -236,23 +234,23 @@ func TestRunErrorResponse(t *testing.T) {
 	writer := ioutil.Discard
 	in := make(chan []byte, 1)
 	defer close(in)
-	want := core.QueryError{
+	want := communication.QueryError{
 		ID:      1234,
 		Message: "it worked",
 	}
 	in <- []byte(fmt.Sprintf("error id=%d msg=%s", want.ID, libts.QueryEncoder.Replace(want.Message)))
 
 	// when
-	_, err := core.Run(in, writer, []byte(""))
+	_, err := communication.Run(in, writer, []byte(""))
 
 	// then
 	if err == nil {
 		LogTestError("", "", t, "expected error from run")
 	}
-	if _, ok := err.(core.QueryError); !ok {
-		LogTestError(reflect.TypeOf(err), "core.QueryError", t)
+	if _, ok := err.(communication.QueryError); !ok {
+		LogTestError(reflect.TypeOf(err), "communication.QueryError", t)
 	}
-	if e := err.(core.QueryError); !(e.ID == want.ID) || !(e.Message == want.Message) {
+	if e := err.(communication.QueryError); !(e.ID == want.ID) || !(e.Message == want.Message) {
 		LogTestError(e, want, t)
 	}
 }
@@ -265,7 +263,7 @@ func TestRunUnexpectedError(t *testing.T) {
 	want := "1 error(s) decoding:\n\n* cannot parse 'id' as int: strconv.ParseInt: parsing \"true\": invalid syntax"
 
 	// when
-	_, err := core.Run(in, writer, []byte(""))
+	_, err := communication.Run(in, writer, []byte(""))
 
 	// then
 	if err == nil {
@@ -283,7 +281,7 @@ func TestSplit(t *testing.T) {
 	in := bytes.NewBufferString("\rtest\n\rerror id=0 msg=\n\rnotify test\n\r")
 
 	// when
-	go core.Split(in, out, notify)
+	go communication.Split(in, out, notify)
 
 	// then
 	go func() {

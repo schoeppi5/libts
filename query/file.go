@@ -1,49 +1,67 @@
 package query
 
 import (
-	"errors"
 	"fmt"
 	"math/rand"
-	"reflect"
 
 	"github.com/schoeppi5/libts"
 )
 
-// FileInfo returns a File for the specified parameters
-// This method is only supported by ServerQuery
-func (a Agent) FileInfo(sid int, cid int, cpw string, name string) (*File, error) {
-	if reflect.TypeOf(a.Query).String() != "serverquery.ServerQuery" {
-		return nil, errors.New("FileInfo is not supported by this query")
+// File represents a file on a virtual server
+type File struct {
+	ChannelID int    `mapstructure:"cid"`
+	Name      string `mapstructure:"name"`
+	Size      int64  `mapstructure:"size"`
+	Timestamp int64  `mapstructure:"datetime"`
+	IsFile    bool   `mapstructure:"type"`
+}
+
+// FileTransfer represents an ongoing filetransfer to or from teamspeak
+type FileTransfer struct {
+	ClientFTFID int    `mapstructure:"clientftfid"`
+	ServerFTFID int    `mapstructure:"serverftfid"`
+	FTKey       string `mapstructure:"ftkey"`
+	Port        int    `mapstructure:"port"`
+	Size        int64  `mapstructure:"size"`
+	Host        string
+}
+
+// FileInfo returns a File on server sid in channel cid with channelpassword cpw and name name
+// This method is only supported by Telnet and SSH query
+// sid - required
+// cid - required
+// cpw - optional
+// name - required
+func (a Agent) FileInfo(sid int, cid int, cpw string, name ...string) ([]File, error) {
+	f := []File{}
+	req := libts.Request{
+		Command:  "ftgetfileinfo",
+		ServerID: sid,
+		Args: map[string]interface{}{
+			"cid":  cid,
+			"cpw":  cpw,
+			"name": name,
+		},
 	}
-	f := File{}
-	err := a.Query.Do(
-		libts.Request{
-			ServerID: sid,
-			Command:  "ftgetfileinfo",
-			Args: map[string]interface{}{
-				"cid":  cid,
-				"cpw":  cpw,
-				"name": name,
-			},
-		}, &f)
+	err := a.Query.Do(req, &f)
 	if err != nil {
 		return nil, err
 	}
-	return &f, nil
+	return f, nil
 }
 
-// FileList lists all files in the given path
-// This function is mainly used for debug purposes, but can easily be used, if file transfer should ever be in the scope of the api
-// This function is only supported by ServerQuery
+// FileList lists all files on server sid in channel cid with channelpassword cpw in path path
+// This function is only supported by telnet and SSH query
+// sid - required
+// cid - required
+// cpw - optional
+// path - required
 func (a Agent) FileList(sid int, cid int, cpw string, path string) ([]File, error) {
-	if reflect.TypeOf(a.Query).String() != "*serverquery.ServerQuery" {
-		return nil, errors.New("FileInfo is not supported by this query")
-	}
 	// test if path is file. If true, return file
 	f, err := a.FileInfo(sid, cid, cpw, path)
 	if err == nil {
-		f.IsFile = true // against contrary belief (docs) ftgetfileinfo **does not** return the type **and can not** be used on directories (returns error 1538 invalid parameter) *sighn*
-		return []File{*f}, nil
+		f[0].IsFile = true // against contrary belief (docs) ftgetfileinfo **does not** return the type **and can not** be used on directories (returns error 1538 invalid parameter) *sighn*
+		return f, nil
 	}
 	files := []File{}
 	err = a.Query.Do(
@@ -62,13 +80,78 @@ func (a Agent) FileList(sid int, cid int, cpw string, path string) ([]File, erro
 	return files, err
 }
 
-// InitDownload initializes the download on the TeamSpeak server
-// This is only supported by ServerQuery
-func (a Agent) InitDownload(sid int, f *File, cpw string) (*FileTransfer, error) {
-	if reflect.TypeOf(a.Query).String() != "*serverquery.ServerQuery" {
-		return nil, errors.New("FileInfo is not supported by this query")
+// CreateDirectory on server sid in channel cid with channelpassword cpw and name name
+// This function is only supported by telnet and SSH query
+// sid - required
+// cid - required
+// cpw - optional
+// name - required
+func (a Agent) CreateDirectory(sid int, cid int, cpw string, name string) error {
+	req := libts.Request{
+		Command:  "ftcreatedir",
+		ServerID: sid,
+		Args: map[string]interface{}{
+			"cid":  cid,
+			"cpw":  cpw,
+			"name": name,
+		},
 	}
-	clientftfid := rand.Int31n(1234)
+	return a.Query.Do(req, nil)
+}
+
+// DeleteFile deletes one or more files on server sid in channel cid with channelpassword cpw and names name
+// sid - required
+// cid - required
+// cpw - optional
+// name - required
+func (a Agent) DeleteFile(sid int, cid int, cpw string, name ...string) error {
+	req := libts.Request{
+		Command:  "ftdeletefile",
+		ServerID: sid,
+		Args: map[string]interface{}{
+			"cid":  cid,
+			"cpw":  cpw,
+			"name": name,
+		},
+	}
+	return a.Query.Do(req, nil)
+}
+
+// MoveFile on server sid from channel cid with channelpassword cpw to channel tcid with channelpassword tcpw and rename from name to newname
+// sid - required
+// cid - required
+// cpw - optional
+// tcid - required - can be same as cid (then the file will only be renamed)
+// tcpw - optional - see above
+// name - required
+// newname - required - can be same as name (then the file will only be moved)
+func (a Agent) MoveFile(sid int, cid int, cpw string, tcid int, tcpw string, name string, newname string) error {
+	req := libts.Request{
+		Command:  "ftrenamefile",
+		ServerID: sid,
+		Args: map[string]interface{}{
+			"cid":     cid,
+			"cpw":     cpw,
+			"oldname": name,
+			"newname": newname,
+		},
+	}
+	if tcid != cid {
+		req.Args["tcid"] = tcid
+		req.Args["tcpw"] = tcpw
+	}
+	return a.Query.Do(req, nil)
+}
+
+// TODO: look into ftstop
+
+// InitDownload initializes the download for file f with channelpassword cpw on server sid
+// This is only supported by telnet and ssh query
+// sid - required
+// f - required
+// cpw - optional
+func (a Agent) InitDownload(sid int, f File, cpw string) (*FileTransfer, error) {
+	clientftfid := rand.Int31n(1234) // random, unique id
 	ft := FileTransfer{}
 	err := a.Query.Do(
 		libts.Request{
@@ -88,13 +171,16 @@ func (a Agent) InitDownload(sid int, f *File, cpw string) (*FileTransfer, error)
 	return &ft, nil
 }
 
-// InitUpload initialized the upload on the teamspeak server
-// This is only supported by ServerQuery
-func (a Agent) InitUpload(sid, cid int, name string, cpw string, overwrite bool, size int) (*FileTransfer, error) {
-	if reflect.TypeOf(a.Query).String() != "*serverquery.ServerQuery" {
-		return nil, errors.New("FileInfo is not supported by this query")
-	}
-	clientftfid := rand.Int31n(1234)
+// InitUpload initialized the upload on server sid into channel cid for a file with name name and size size
+// This is only supported by telnet and ssh query
+// sid - required
+// cid - required
+// cpw - optional
+// name - required
+// overwrite - optional - default false
+// size - required
+func (a Agent) InitUpload(sid, cid int, cpw string, name string, overwrite bool, size int) (*FileTransfer, error) {
+	clientftfid := rand.Int31n(1234) // random, unique id
 	ft := FileTransfer{}
 	err := a.Query.Do(
 		libts.Request{
@@ -115,13 +201,16 @@ func (a Agent) InitUpload(sid, cid int, name string, cpw string, overwrite bool,
 	return &ft, nil
 }
 
+// TODO: ftlist
+
 // DownloadAvatar for a specific client
+// This function is only supported by telnet and SSH query
 func (a Agent) DownloadAvatar(sid int, clientBase64Hash string) ([]byte, error) {
 	f, err := a.FileInfo(sid, 0, "", fmt.Sprintf("/avatar_%s", clientBase64Hash))
 	if err != nil {
 		return nil, err
 	}
-	ft, err := a.InitDownload(sid, f, "")
+	ft, err := a.InitDownload(sid, f[0], "")
 	if err != nil {
 		return nil, err
 	}
@@ -133,8 +222,10 @@ func (a Agent) DownloadAvatar(sid int, clientBase64Hash string) ([]byte, error) 
 }
 
 // DownloadIcon for specific iconID
+// This function is only supported by telnet and SSH query
 // iconID is normally an int in the structs. It is supposed to be an uint32, but the query screws up sometimes
 // Read all about it here: https://community.teamspeak.com/t/bug-query-sends-wrong-icon-id-in-response/15054
+// so just do uint32(iconID) to get the correct iconID
 func (a Agent) DownloadIcon(sid int, iconID uint32) ([]byte, error) {
 	if iconID == 0 {
 		return []byte(""), nil
@@ -143,7 +234,7 @@ func (a Agent) DownloadIcon(sid int, iconID uint32) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	ft, err := a.InitDownload(sid, f, "")
+	ft, err := a.InitDownload(sid, f[0], "")
 	if err != nil {
 		return nil, err
 	}

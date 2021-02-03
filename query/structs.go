@@ -53,7 +53,7 @@ type VirtualServer struct {
 	DefaultChannelAdminGroup         int     `mapstructure:"virtualserver_default_channel_admin_group"`
 	HostbannerURL                    string  `mapstructure:"virtualserver_hostbanner_url"`
 	HostbannerGFXURL                 string  `mapstructure:"virtualserver_hostbanner_gfx_url"`
-	HostbannergFXInterval            string  `mapstructure:"virtualserver_hostbanner_gfx_interval"`
+	HostbannerGFXInterval            string  `mapstructure:"virtualserver_hostbanner_gfx_interval"`
 	ComplainAutobanCount             int     `mapstructure:"virtualserver_complain_autoban_count"`
 	ComplainAutobanTime              int     `mapstructure:"virtualserver_complain_autoban_time"`
 	ComplainRemoveTime               int     `mapstructure:"virtualserver_complain_remove_time"`
@@ -109,57 +109,6 @@ type Channel struct {
 	SecondsEmpty     int64  `mapstructure:"seconds_empty"`
 }
 
-// Client is a single client on a virtual server
-type Client struct {
-	ID                         int
-	Away                       int       `mapstructure:"client_away"`
-	AwayMessage                string    `mapstructure:"client_away_message"`
-	Base64Hash                 string    `mapstructure:"client_base64HashClientUID"`
-	ChannelGroups              GroupList `mapstructure:"client_channel_group_id"`
-	ChannelID                  int       `mapstructure:"cid"`
-	ConnectedTime              int       `mapstructure:"connection_connected_time"`
-	Country                    string    `mapstructure:"client_country"`
-	DbID                       int       `mapstructure:"client_database_id"`
-	DefaultChannel             string    `mapstructure:"client_default_channel"`
-	DefaultToken               string    `mapstructure:"client_default_token"`
-	Description                string    `mapstructure:"client_description"`
-	EstimatedLocation          string    `mapstructure:"client_estimated_location"`
-	FirstConnect               int64     `mapstructure:"client_created"`
-	FlagAvatar                 string    `mapstructure:"client_flag_avatar"`
-	IP                         string    `mapstructure:"connection_client_ip"`
-	IconID                     uint32    `mapstructure:"client_icon_id"`
-	IdleTime                   int       `mapstructure:"client_idle_time"`
-	InputHardware              bool      `mapstructure:"client_input_hardware"`
-	InputMuted                 bool      `mapstructure:"client_input_muted"`
-	Integrations               string    `mapstructure:"client_integrations"`
-	IsChannelCommander         bool      `mapstructure:"client_is_channel_commander"`
-	IsPrioritySpeaker          bool      `mapstructure:"client_is_priority_speaker"`
-	IsRecording                bool      `mapstructure:"client_is_recording"`
-	IsServerQuery              bool      `mapstructure:"client_type"`
-	IsTalker                   bool      `mapstructure:"client_is_talker"`
-	LastConnect                int64     `mapstructure:"client_lastconnected"`
-	LoginName                  string    `mapstructure:"client_login_name"`
-	Metadata                   string    `mapstructure:"client_meta_data"`
-	MyTeamspeakAvatar          string    `mapstructure:"client_myteamspeak_avatar"`
-	MyTeamspeakID              string    `mapstructure:"client_myteamspeak_id"`
-	NeededServerQueryViewPower int       `mapstructure:"client_needed_serverquery_view_power"`
-	Nickname                   string    `mapstructure:"client_nickname"`
-	NicknamePhonetic           string    `mapstructure:"client_nickname_phonetic"`
-	OutputHardware             bool      `mapstructure:"client_output_hardware"`
-	OutputMuted                bool      `mapstructure:"client_output_muted"`
-	OutputOnlyMuted            bool      `mapstructure:"client_outputonly_muted"`
-	Platform                   string    `mapstructure:"client_platform"`
-	SecurityHash               string    `mapstructure:"client_security_hash"`
-	ServerGroups               GroupList `mapstructure:"client_servergroups"`
-	TalkRequest                bool      `mapstructure:"client_talk_request"`
-	TalkRequestMessage         string    `mapstructure:"client_talk_request_msg"`
-	Talkpower                  int       `mapstructure:"client_talk_power"`
-	TotalConnections           int       `mapstructure:"client_totalconnections"`
-	UID                        string    `mapstructure:"client_unique_identifier"`
-	Version                    string    `mapstructure:"client_version"`
-	VersionSign                string    `mapstructure:"client_version_sign"`
-}
-
 // Group represents a group on a virtual server (server|channel)
 type Group struct {
 	ID     int    `mapstructure:"sgid" mapstructure:"cgid"`
@@ -167,25 +116,6 @@ type Group struct {
 	Type   int    `mapstructure:"type"`   // 1 -> Server | 2 -> Channel
 	IconID int32  `mapstructure:"iconid"` // ok so here me out: There is a bug, that is not a bug. Read all about it here (https://community.teamspeak.com/t/bug-query-sends-wrong-icon-id-in-response/15054)
 	SaveDB bool   `mapstructure:"savedb"`
-}
-
-// File represents a file on a virtual server
-type File struct {
-	ChannelID int    `mapstructure:"cid"`
-	Name      string `mapstructure:"name"`
-	Size      int64  `mapstructure:"size"`
-	Timestamp int64  `mapstructure:"datetime"`
-	IsFile    bool   `mapstructure:"type"`
-}
-
-// FileTransfer represents an ongoing filetransfer to or from teamspeak
-type FileTransfer struct {
-	ClientFTFID int    `mapstructure:"clientftfid"`
-	ServerFTFID int    `mapstructure:"serverftfid"`
-	FTKey       string `mapstructure:"ftkey"`
-	Port        int    `mapstructure:"port"`
-	Size        int64  `mapstructure:"size"`
-	Host        string
 }
 
 // Codec represents the possible codecs of a channel

@@ -1,10 +1,8 @@
-package core_test
+package communication_test
 
 import (
 	"reflect"
 	"testing"
-
-	"github.com/schoeppi5/libts/core"
 
 	"github.com/schoeppi5/libts"
 )
@@ -27,11 +25,11 @@ func TestSortEvents(t *testing.T) {
 		C:        c,
 		Template: &tmp{},
 	}
-	es := core.NewEventStore()
+	es := communication.NewEventStore()
 	es.Add("notifytest", event)
 
 	// when
-	go core.SortEvents(in, es)
+	go communication.SortEvents(in, es)
 
 	// then
 	notify := <-c
@@ -57,11 +55,11 @@ func TestSortEventsNonPointerTemplate(t *testing.T) {
 		C:        c,
 		Template: tmp{}, // non pointer
 	}
-	es := core.NewEventStore()
+	es := communication.NewEventStore()
 	es.Add("notifytest", event)
 
 	// when
-	go core.SortEvents(in, es)
+	go communication.SortEvents(in, es)
 
 	// then
 	notify := <-c
@@ -80,7 +78,7 @@ func TestSortEventsClosedChannel(t *testing.T) {
 	close(in)
 
 	// when
-	core.SortEvents(in, core.NewEventStore())
+	communication.SortEvents(in, communication.NewEventStore())
 
 	// then
 	// passes when not killed by deadline

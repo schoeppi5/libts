@@ -1,4 +1,4 @@
-package core_test
+package communication_test
 
 import (
 	"fmt"

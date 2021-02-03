@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/schoeppi5/libts"
-	"github.com/schoeppi5/libts/core"
+	"github.com/schoeppi5/libts/communication"
 )
 
 // This file fullfills the libts.Query interface
@@ -15,7 +15,7 @@ func (sq *ServerQuery) Do(request libts.Request, value interface{}) error {
 	if err != nil {
 		return err
 	}
-	return core.UnmarshalResponse(core.ConvertResponse(raw), value)
+	return communication.UnmarshalResponse(communication.ConvertResponse(raw), value)
 }
 
 // DoRaw a command and return the raw response
@@ -32,13 +32,22 @@ func (sq *ServerQuery) DoRaw(request libts.Request) ([]byte, error) {
 		sq.conn.SetReadDeadline(time.Time{})
 		sq.conn.SetWriteDeadline(time.Time{})
 	}()
-	return core.Run(sq.in, sq.conn, []byte(request.String()))
+	return communication.Run(sq.in, sq.conn, []byte(request.String()))
 }
 
 // Notification returns an io.Reader for arriving events
 func (sq *ServerQuery) Notification() <-chan []byte {
 	sq.notify = make(chan []byte, 5)
 	return sq.notify
+}
+
+// Connected sends the version command and returns the recieved error, if any
+func (sq *ServerQuery) Connected() (bool, error) {
+	version := libts.Request{
+		Command: "version",
+	}
+	_, err := sq.DoRaw(version)
+	return err == nil, err
 }
 
 // use selects the virtual server for queries. Only changes the virtual server when needed

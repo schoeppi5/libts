@@ -1,4 +1,4 @@
-package core
+package communication
 
 import (
 	"bytes"
@@ -93,9 +93,10 @@ func IsError(r []byte) error {
 // ConvertResponse parses the serverquery response to a map
 func ConvertResponse(r []byte) []map[string]interface{} {
 	var list []map[string]interface{}
+	r = bytes.Trim(bytes.TrimSpace(r), "|")
 	items := bytes.Split(r, []byte("|"))
-	for i := range items {
-		list = append(list, responseToMap(items[i]))
+	for j := range items {
+		list = append(list, responseToMap(items[j]))
 	}
 	return list
 }
