@@ -3,6 +3,8 @@ package communication_test
 import (
 	"fmt"
 	"testing"
+
+	"github.com/schoeppi5/libts/communication"
 )
 
 func TestUnmarshalResponseMapToStruct(t *testing.T) {

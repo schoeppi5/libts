@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/schoeppi5/libts"
+	"github.com/schoeppi5/libts/communication"
 )
 
 func TestSortEvents(t *testing.T) {

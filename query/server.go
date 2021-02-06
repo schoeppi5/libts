@@ -5,6 +5,7 @@ import (
 	"net"
 
 	"github.com/schoeppi5/libts"
+	"github.com/schoeppi5/libts/communication"
 )
 
 // HostInfo contains the info about the TeamSpeak 3 server host
@@ -74,6 +75,21 @@ func (a Agent) Instance() (*InstanceInfo, error) {
 	return instance, nil
 }
 
+// InstanceEdit changes the instance according to instance
+// instance - required - be aware that also null values are used. e.g.: if FileTransferPort is left undeclared in the struct it will have 0 as its value and the function will attempt to change the port to 0
+// So it is advice to first get the InstanceInfo using Instance(), then change what you want to change and send it back
+func (a Agent) InstanceEdit(instance InstanceInfo) error {
+	args, err := communication.MarshalRequest(instance)
+	if err != nil {
+		return err
+	}
+	req := libts.Request{
+		Command: "instanceedit",
+		Args:    args,
+	}
+	return a.Query.Do(req, nil)
+}
+
 // BindingList returns the bindings for the specified subsystem
 // sid - required
 // subsystem - optional - Default 'voice' - Possible 'voice', 'query', 'filetransfer'
@@ -98,4 +114,16 @@ func (a Agent) BindingList(sid int, subsystem string) ([]net.IP, error) {
 		ipList = append(ipList, net.ParseIP(ips[i].IP))
 	}
 	return ipList, nil
+}
+
+// GlobalMessage sends message message to virtualservers in the server chat (using the gm command - I just don't know, why this command has such a non descriptive name)
+// message - required
+func (a Agent) GlobalMessage(message string) error {
+	req := libts.Request{
+		Command: "gm",
+		Args: map[string]interface{}{
+			"msg": message,
+		},
+	}
+	return a.Query.Do(req, nil)
 }

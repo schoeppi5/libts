@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/schoeppi5/libts"
+	"github.com/schoeppi5/libts/communication"
 )
 
 func TestQueryErrorIsError(t *testing.T) {
