@@ -282,7 +282,7 @@ func TestSplit(t *testing.T) {
 	in := bytes.NewBufferString("\rtest\n\rerror id=0 msg=\n\rnotify test\n\r")
 
 	// when
-	go communication.Split(in, out, notify)
+	go communication.Read(in, out, notify)
 
 	// then
 	go func() {

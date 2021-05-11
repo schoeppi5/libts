@@ -45,7 +45,7 @@ func NewServerQuery(host string, port int, username string, password string) (*S
 		conn:     conn,
 		notify:   nil,
 	}
-	go communication.Split(conn, sq.in, sq.notify) // split the input from teamspeak into notifys and everything else
+	go communication.Read(conn, sq.in, sq.notify) // split the input from teamspeak into notifys and everything else
 	// slurp the header
 	err = communication.ReadHeader(in)
 	if err != nil {

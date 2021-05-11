@@ -84,12 +84,12 @@ func Run(in <-chan []byte, out io.Writer, r []byte) ([]byte, error) {
 	}
 }
 
-// Split the input from c
+// Read the input from c
 // notifications (prefixed with notify.*) are send to notify, everything else is send to out
 // Stops when c is closed or it encounters an error while reading from c
 // If notify is nil, notifications are discarded
 // If out is nil, Split returns
-func Split(c io.Reader, out chan<- []byte, notify chan<- []byte) {
+func Read(c io.Reader, out chan<- []byte, notify chan<- []byte) {
 	if out == nil {
 		return
 	}

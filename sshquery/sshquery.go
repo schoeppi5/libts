@@ -69,8 +69,8 @@ func NewSSHQuery(host string, port int, username, password string) (*SSHQuery, e
 		out:      out,
 		notify:   nil,
 	}
-	go communication.Split(input, sshq.in, sshq.notify) // split the input from teamspeak into notifys and everything else
-	err = communication.ReadHeader(in)                  // slurp header
+	go communication.Read(input, sshq.in, sshq.notify) // split the input from teamspeak into notifys and everything else
+	err = communication.ReadHeader(in)                 // slurp header
 	if err != nil {
 		conn.Close()
 		return nil, err
