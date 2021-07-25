@@ -92,7 +92,7 @@ type Event struct {
 	C        chan<- interface{}
 }
 
-// Query is the interface for all implementation (webquery, serverquery, more?)
+// Query is the interface for all implementation (webquery, serverquery, sshquery)
 // Be aware, that different queries can do different things (e.g. serverquery can recieve notifications, webquery can't atm)
 type Query interface {
 	// Do executes a given request against teamspeak and tries to parse the answer in the given interface

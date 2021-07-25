@@ -88,7 +88,7 @@ func Run(in <-chan []byte, out io.Writer, r []byte) ([]byte, error) {
 // notifications (prefixed with notify.*) are send to notify, everything else is send to out
 // Stops when c is closed or it encounters an error while reading from c
 // If notify is nil, notifications are discarded
-// If out is nil, Split returns
+// If out is nil, Read returns
 func Read(c io.Reader, out chan<- []byte, notify chan<- []byte) {
 	if out == nil {
 		return

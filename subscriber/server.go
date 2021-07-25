@@ -8,7 +8,7 @@ func (a Agent) ServerEdited(c chan interface{}) error {
 	s := libts.Subscription{
 		Name: Server,
 		Events: map[string]libts.Event{
-			ServerEdited: libts.Event{
+			ServerEdited: {
 				Template: &ServerEditedEvent{},
 				C:        c,
 			},
@@ -27,7 +27,7 @@ func (a Agent) ClientJoinedServer(c chan interface{}) error {
 	s := libts.Subscription{
 		Name: Server,
 		Events: map[string]libts.Event{
-			ClientEnterView: libts.Event{
+			ClientEnterView: {
 				Template: &ClientEnterViewEvent{},
 				C:        c,
 			},
@@ -46,7 +46,7 @@ func (a Agent) ClientLeftServer(c chan interface{}) error {
 	s := libts.Subscription{
 		Name: Server,
 		Events: map[string]libts.Event{
-			ClientLeftView: libts.Event{
+			ClientLeftView: {
 				Template: &ClientLeftViewEvent{},
 				C:        c,
 			},

@@ -9,7 +9,7 @@ func (a Agent) ChannelCreated(c chan interface{}) error {
 		Name:      Channel,
 		ChannelID: 0,
 		Events: map[string]libts.Event{
-			ChannelCreated: libts.Event{
+			ChannelCreated: {
 				Template: &ChannelCreatedEvent{},
 				C:        c,
 			},
@@ -29,7 +29,7 @@ func (a Agent) ChannelDeleted(c chan interface{}, cid int) error {
 		Name:      Channel,
 		ChannelID: cid,
 		Events: map[string]libts.Event{
-			ChannelDeleted: libts.Event{
+			ChannelDeleted: {
 				Template: &ChannelDeletedEvent{},
 				C:        c,
 			},
@@ -49,7 +49,7 @@ func (a Agent) ChannelMoved(c chan interface{}, cid int) error {
 		Name:      Channel,
 		ChannelID: cid,
 		Events: map[string]libts.Event{
-			ChannelMoved: libts.Event{
+			ChannelMoved: {
 				Template: &ChannelMovedEvent{},
 				C:        c,
 			},
@@ -69,7 +69,7 @@ func (a Agent) ChannelEdited(c chan interface{}, cid int) error {
 		Name:      Channel,
 		ChannelID: cid,
 		Events: map[string]libts.Event{
-			ChannelEdited: libts.Event{
+			ChannelEdited: {
 				Template: &ChannelEditedEvent{},
 				C:        c,
 			},
@@ -89,7 +89,7 @@ func (a Agent) ChannelDescriptionChanged(c chan interface{}, cid int) error {
 		Name:      Channel,
 		ChannelID: cid,
 		Events: map[string]libts.Event{
-			ChannelDescriptionChanged: libts.Event{
+			ChannelDescriptionChanged: {
 				Template: &ChannelDescriptionChangedEvent{},
 				C:        c,
 			},
@@ -110,7 +110,7 @@ func (a Agent) ChannelPasswordChanged(c chan interface{}, cid int) error {
 		Name:      Channel,
 		ChannelID: cid,
 		Events: map[string]libts.Event{
-			ChannelPasswordChanged: libts.Event{
+			ChannelPasswordChanged: {
 				Template: &ChannelPasswordChangedEvent{},
 				C:        c,
 			},
@@ -130,7 +130,7 @@ func (a Agent) ClientMoved(c chan interface{}, cid int) error {
 		Name:      Channel,
 		ChannelID: cid,
 		Events: map[string]libts.Event{
-			ClientMoved: libts.Event{
+			ClientMoved: {
 				Template: &ClientMovedEvent{},
 				C:        c,
 			},
@@ -150,7 +150,7 @@ func (a Agent) ClientJoinedChannel(c chan interface{}, cid int) error {
 		Name:      Channel,
 		ChannelID: cid,
 		Events: map[string]libts.Event{
-			ClientEnterView: libts.Event{
+			ClientEnterView: {
 				Template: &ClientEnterViewEvent{},
 				C:        c,
 			},
@@ -170,7 +170,7 @@ func (a Agent) ClientLeftChannel(c chan interface{}, cid int) error {
 		Name:      Channel,
 		ChannelID: cid,
 		Events: map[string]libts.Event{
-			ClientLeftView: libts.Event{
+			ClientLeftView: {
 				Template: &ClientLeftViewEvent{},
 				C:        c,
 			},

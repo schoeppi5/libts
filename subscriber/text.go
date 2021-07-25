@@ -20,7 +20,7 @@ func (a Agent) TextMessage(c chan interface{}, target TextMessageTarget) error {
 	s := libts.Subscription{
 		Name: string(target),
 		Events: map[string]libts.Event{
-			TextMessage: libts.Event{
+			TextMessage: {
 				Template: &TextMessageEvent{},
 				C:        c,
 			},

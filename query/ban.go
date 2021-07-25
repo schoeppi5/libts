@@ -27,7 +27,7 @@ type Ban struct {
 // time - optional - Default 0 (infinite)
 // reason - optional
 // lastnickname - optional - I dunno what ever
-// Possibly returns multiple banids if more than one matches are found
+// Possibly returns multiple banids if more than one matche is found
 func (a Agent) BanAdd(sid int, ip string, name string, uid string, mytsid string, time time.Duration, reason string, lastnickname string) (int, error) {
 	req := libts.Request{
 		Command:  "banadd",

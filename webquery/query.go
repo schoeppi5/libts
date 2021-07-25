@@ -43,7 +43,6 @@ func (wq WebQuery) DoRaw(request libts.Request) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("Request: %s\n\tBody: %s", request.String(), respBody)
 	body := response{}
 	err = json.Unmarshal(respBody, &body)
 	if err != nil {

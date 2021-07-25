@@ -63,7 +63,7 @@ type VirtualServer struct {
 	AntifloodPointsTickReduce        int     `mapstructure:"virtualserver_antiflood_points_tick_reduce"`
 	AntifloodCommandBlock            int     `mapstructure:"virtualserver_antiflood_points_needed_command_block"`
 	AntifloodIPBlock                 int     `mapstructure:"virtualserver_antiflood_points_needed_ip_block"`
-	TotalClientConnections           int     `mapstructure:"virtualserver_client_connections"`       //I think thats all connections since startup (not creation)
+	TotalClientConnections           int     `mapstructure:"virtualserver_client_connections"`       // I think thats all connections since startup (not creation)
 	TotalQueryConnections            int     `mapstructure:"virtualserver_query_client_connections"` // Same here
 	HostbuttonToolTip                string  `mapstructure:"virtualserver_hostbutton_tooltip"`
 	HostbuttonURL                    string  `mapstructure:"virtualserver_hostbutton_url"`
@@ -137,7 +137,7 @@ func (c *Codec) UnmarshalText(text []byte) error {
 	case "5":
 		*c = "Opus Music"
 	default:
-		return fmt.Errorf("Failed to unmarshal %s to codec", text)
+		return fmt.Errorf("failed to unmarshal %s to codec", text)
 	}
 	return nil
 }

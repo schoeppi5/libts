@@ -8,7 +8,7 @@ func (a Agent) TokenUsed(c chan interface{}) error {
 	s := libts.Subscription{
 		Name: Token,
 		Events: map[string]libts.Event{
-			TokenUsed: libts.Event{
+			TokenUsed: {
 				Template: &TokenUsedEvent{},
 				C:        c,
 			},

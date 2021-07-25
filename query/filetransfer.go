@@ -38,7 +38,7 @@ func (a Agent) UploadFile(ft *FileTransfer, file []byte) error {
 		return err
 	}
 	if size != len(file) {
-		return fmt.Errorf("Failed to upload file correctly! Uploaded %d bytes of %d. %d%%", size, len(file), (size/len(file))*100)
+		return fmt.Errorf("failed to upload file correctly! Uploaded %d bytes of %d. %d%%", size, len(file), (size/len(file))*100)
 	}
 	return nil
 }

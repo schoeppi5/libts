@@ -21,7 +21,7 @@ type Me struct {
 
 // WhoAmI returns Me
 // sid - optional - It depends on the used query what happens. WebQuery will execute WhoAmI without a server. Telnet and SSH query will use the currently selected virtual server
-// The output (filled fields) obviously vary based on the circumstances of the call (with or whithout sid)
+// The output (filled fields) obviously varies based on the circumstances of the call (with or whithout sid)
 func (a Agent) WhoAmI(sid int) (*Me, error) {
 	whoami := libts.Request{
 		Command: "whoami",
